@@ -1,0 +1,877 @@
+{
+  "schema": {
+    "database": "coworkingManager",
+    "tables": [
+      {
+        "name": "users",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT",
+            "primary_key": true,
+            "auto_increment": true
+          },
+          {
+            "name": "nombre",
+            "type": "VARCHAR(100)",
+            "not_null": true
+          },
+          {
+            "name": "email",
+            "type": "VARCHAR(150)",
+            "not_null": true,
+            "unique": true
+          },
+          {
+            "name": "contraseña_hash",
+            "type": "VARCHAR(255)"
+          },
+          {
+            "name": "rol",
+            "type": "ENUM('user', 'admin')",
+            "default": "user",
+            "not_null": true
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP"
+          },
+          {
+            "name": "updated_at",
+            "type": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          }
+        ],
+        "indexes": [
+          {
+            "name": "idx_email",
+            "columns": [
+              "email"
+            ]
+          },
+          {
+            "name": "idx_rol",
+            "columns": [
+              "rol"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "sedes",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT",
+            "primary_key": true,
+            "auto_increment": true
+          },
+          {
+            "name": "nombre",
+            "type": "VARCHAR(100)",
+            "not_null": true,
+            "unique": true
+          },
+          {
+            "name": "direccion",
+            "type": "VARCHAR(255)"
+          },
+          {
+            "name": "ciudad",
+            "type": "VARCHAR(100)",
+            "not_null": true
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP"
+          },
+          {
+            "name": "updated_at",
+            "type": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          }
+        ],
+        "indexes": [
+          {
+            "name": "idx_ciudad",
+            "columns": [
+              "ciudad"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "recursos",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT",
+            "primary_key": true,
+            "auto_increment": true
+          },
+          {
+            "name": "nombre",
+            "type": "VARCHAR(100)",
+            "not_null": true,
+            "unique": true
+          },
+          {
+            "name": "descripcion",
+            "type": "TEXT"
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP"
+          }
+        ]
+      },
+      {
+        "name": "rooms",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT",
+            "primary_key": true,
+            "auto_increment": true
+          },
+          {
+            "name": "nombre",
+            "type": "VARCHAR(100)",
+            "not_null": true
+          },
+          {
+            "name": "sede_id",
+            "not_null": true
+          },
+          {
+            "name": "capacidad",
+            "type": "INT",
+            "not_null": true,
+            "check": "capacidad > 0"
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP"
+          },
+          {
+            "name": "updated_at",
+            "type": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          }
+        ],
+        "foreign_keys": [
+          {
+            "column": "sede_id",
+            "references": "sedes(id)",
+            "on_delete": "CASCADE"
+          }
+        ],
+        "indexes": [
+          {
+            "name": "idx_sede_id",
+            "columns": [
+              "sede_id"
+            ]
+          },
+          {
+            "name": "idx_nombre",
+            "columns": [
+              "nombre"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "room_recursos",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT",
+            "primary_key": true,
+            "auto_increment": true
+          },
+          {
+            "name": "room_id",
+            "type": "INT",
+            "not_null": true
+          },
+          {
+            "name": "recurso_id",
+            "type": "INT",
+            "not_null": true
+          },
+          {
+            "name": "cantidad",
+            "type": "INT",
+            "default": 1,
+            "check": "cantidad >= 0"
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP"
+          }
+        ],
+        "foreign_keys": [
+          {
+            "column": "room_id",
+            "references": "rooms(id)",
+            "on_delete": "CASCADE"
+          },
+          {
+            "column": "recurso_id",
+            "references": "recursos(id)",
+            "on_delete": "CASCADE"
+          }
+        ],
+        "constraints": [
+          {
+            "type": "UNIQUE",
+            "columns": [
+              "room_id",
+              "recurso_id"
+            ]
+          }
+        ],
+        "indexes": [
+          {
+            "name": "idx_room_id",
+            "columns": [
+              "room_id"
+            ]
+          },
+          {
+            "name": "idx_recurso_id",
+            "columns": [
+              "recurso_id"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "reservations",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT",
+            "primary_key": true,
+            "auto_increment": true
+          },
+          {
+            "name": "usuario_id",
+            "type": "INT",
+            "not_null": true
+          },
+          {
+            "name": "room_id",
+            "type": "INT",
+            "not_null": true
+          },
+          {
+            "name": "fecha",
+            "type": "DATE",
+            "not_null": true
+          },
+          {
+            "name": "hora_inicio",
+            "type": "TIME",
+            "not_null": true
+          },
+          {
+            "name": "hora_fin",
+            "type": "TIME",
+            "not_null": true
+          },
+          {
+            "name": "estado",
+            "type": "ENUM('pendiente', 'confirmada', 'cancelada')",
+            "default": "pendiente",
+            "not_null": true
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP"
+          },
+          {
+            "name": "updated_at",
+            "type": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          }
+        ],
+        "foreign_keys": [
+          {
+            "column": "usuario_id",
+            "references": "users(id)",
+            "on_delete": "CASCADE"
+          },
+          {
+            "column": "room_id",
+            "references": "rooms(id)",
+            "on_delete": "CASCADE"
+          }
+        ],
+        "indexes": [
+          {
+            "name": "idx_usuario_id",
+            "columns": [
+              "usuario_id"
+            ]
+          },
+          {
+            "name": "idx_room_id",
+            "columns": [
+              "room_id"
+            ]
+          },
+          {
+            "name": "idx_fecha",
+            "columns": [
+              "fecha"
+            ]
+          },
+          {
+            "name": "idx_estado",
+            "columns": [
+              "estado"
+            ]
+          },
+          {
+            "name": "idx_fecha_hora",
+            "columns": [
+              "fecha",
+              "hora_inicio",
+              "hora_fin"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "penalizaciones",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT",
+            "primary_key": true,
+            "auto_increment": true
+          },
+          {
+            "name": "usuario_id",
+            "type": "INT",
+            "not_null": true
+          },
+          {
+            "name": "motivo",
+            "type": "TEXT",
+            "not_null": true
+          },
+          {
+            "name": "fecha_inicio",
+            "type": "DATE",
+            "not_null": true
+          },
+          {
+            "name": "fecha_fin",
+            "type": "DATE",
+            "not_null": true
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP"
+          }
+        ],
+        "foreign_keys": [
+          {
+            "column": "usuario_id",
+            "references": "users(id)",
+            "on_delete": "CASCADE"
+          }
+        ],
+        "indexes": [
+          {
+            "name": "idx_usuario_id",
+            "columns": [
+              "usuario_id"
+            ]
+          },
+          {
+            "name": "idx_fechas",
+            "columns": [
+              "fecha_inicio",
+              "fecha_fin"
+            ]
+          }
+        ]
+      }
+    ],
+    "initial_data": {
+      "sedes": [
+        {
+          "nombre": "Bogotá Norte",
+          "ciudad": "Bogotá",
+          "direccion": "Calle 100 # 15-20"
+        },
+        {
+          "nombre": "Bogotá Centro",
+          "ciudad": "Bogotá",
+          "direccion": "Carrera 7 # 22-45"
+        },
+        {
+          "nombre": "Medellín Poblado",
+          "ciudad": "Medellín",
+          "direccion": "Carrera 43A # 6-50"
+        },
+        {
+          "nombre": "Cali Granada",
+          "ciudad": "Cali",
+          "direccion": "Avenida 4N # 15-30"
+        }
+      ],
+      "recursos": [
+        {
+          "nombre": "proyector",
+          "descripcion": "Proyector HD con conectores HDMI y VGA"
+        },
+        {
+          "nombre": "pizarra",
+          "descripcion": "Pizarra blanca con marcadores"
+        },
+        {
+          "nombre": "aire_acondicionado",
+          "descripcion": "Sistema de aire acondicionado"
+        },
+        {
+          "nombre": "wifi",
+          "descripcion": "Conexión WiFi de alta velocidad"
+        },
+        {
+          "nombre": "impresora",
+          "descripcion": "Impresora láser multifuncional"
+        },
+        {
+          "nombre": "telefono",
+          "descripcion": "Teléfono para conferencias"
+        },
+        {
+          "nombre": "cafetera",
+          "descripcion": "Máquina de café automática"
+        }
+      ],
+      "rooms": [
+        {
+          "nombre": "Sala Ejecutiva A",
+          "sede_id": 1,
+          "capacidad": 10
+        },
+        {
+          "nombre": "Sala Reuniones B",
+          "sede_id": 1,
+          "capacidad": 6
+        },
+        {
+          "nombre": "Sala Conferencias C",
+          "sede_id": 2,
+          "capacidad": 20
+        },
+        {
+          "nombre": "Sala Creativa D",
+          "sede_id": 3,
+          "capacidad": 8
+        },
+        {
+          "nombre": "Sala Focus E",
+          "sede_id": 4,
+          "capacidad": 4
+        }
+      ],
+      "room_recursos": [
+        {
+          "room_id": 1,
+          "recurso_id": 1,
+          "cantidad": 1
+        },
+        {
+          "room_id": 1,
+          "recurso_id": 2,
+          "cantidad": 1
+        },
+        {
+          "room_id": 1,
+          "recurso_id": 3,
+          "cantidad": 1
+        },
+        {
+          "room_id": 1,
+          "recurso_id": 4,
+          "cantidad": 1
+        },
+        {
+          "room_id": 2,
+          "recurso_id": 2,
+          "cantidad": 1
+        },
+        {
+          "room_id": 2,
+          "recurso_id": 4,
+          "cantidad": 1
+        },
+        {
+          "room_id": 3,
+          "recurso_id": 1,
+          "cantidad": 2
+        },
+        {
+          "room_id": 3,
+          "recurso_id": 2,
+          "cantidad": 1
+        },
+        {
+          "room_id": 3,
+          "recurso_id": 3,
+          "cantidad": 1
+        },
+        {
+          "room_id": 3,
+          "recurso_id": 4,
+          "cantidad": 1
+        },
+        {
+          "room_id": 3,
+          "recurso_id": 5,
+          "cantidad": 1
+        },
+        {
+          "room_id": 4,
+          "recurso_id": 2,
+          "cantidad": 2
+        },
+        {
+          "room_id": 4,
+          "recurso_id": 4,
+          "cantidad": 1
+        },
+        {
+          "room_id": 4,
+          "recurso_id": 6,
+          "cantidad": 1
+        },
+        {
+          "room_id": 5,
+          "recurso_id": 4,
+          "cantidad": 1
+        }
+      ]
+    }
+  },
+  "users": [
+    {
+      "id": 1,
+      "nombre": "Administrador",
+      "email": "admin@coworking.com",
+      "contraseña_hash": "",
+      "rol": "admin",
+      "created_at": "2025-09-18T14:16:43.375042",
+      "updated_at": "2025-09-18T14:16:43.375050"
+    },
+    {
+      "id": 2,
+      "nombre": "Juan Pérez",
+      "email": "juan@email.com",
+      "contraseña_hash": "",
+      "rol": "user",
+      "created_at": "2025-09-18T14:16:43.375052",
+      "updated_at": "2025-09-18T14:16:43.375052"
+    },
+    {
+      "nombre": "admin",
+      "email": "admin@admin.com",
+      "rol": "admin",
+      "contraseña_hash": "$2b$12$mOlLBhEwmlFueKWgR1fn7uZN2dD1pYwc8trs51vuzGNmQRTmlvhF6",
+      "id": 3,
+      "created_at": "2025-09-18T14:30:43.869576"
+    },
+    {
+      "nombre": "user",
+      "email": "user@user.com",
+      "rol": "user",
+      "contraseña_hash": "$2b$12$IN6Wx0z8v.w3cEDacEFJH.5e4Ak7SDC67UAZKAYqYsGwlfYTZt0ru",
+      "id": 4,
+      "created_at": "2025-09-18T15:23:48.498054"
+    }
+  ],
+  "sedes": [
+    {
+      "id": 1,
+      "nombre": "Bogotá Norte",
+      "ciudad": "Bogotá",
+      "direccion": "Calle 100 # 15-20",
+      "created_at": "2025-09-18T14:16:43.375053",
+      "updated_at": "2025-09-18T14:16:43.375054"
+    },
+    {
+      "id": 2,
+      "nombre": "Bogotá Centro",
+      "ciudad": "Bogotá",
+      "direccion": "Carrera 7 # 22-45",
+      "created_at": "2025-09-18T14:16:43.375055",
+      "updated_at": "2025-09-18T14:16:43.375056"
+    },
+    {
+      "id": 3,
+      "nombre": "Medellín Poblado",
+      "ciudad": "Medellín",
+      "direccion": "Carrera 43A # 6-50",
+      "created_at": "2025-09-18T14:16:43.375056",
+      "updated_at": "2025-09-18T14:16:43.375057"
+    },
+    {
+      "id": 4,
+      "nombre": "Cali Granada",
+      "ciudad": "Cali",
+      "direccion": "Avenida 4N # 15-30",
+      "created_at": "2025-09-18T14:16:43.375058",
+      "updated_at": "2025-09-18T14:16:43.375058"
+    }
+  ],
+  "recursos": [
+    {
+      "id": 1,
+      "nombre": "proyector",
+      "descripcion": "Proyector HD con conectores HDMI y VGA",
+      "created_at": "2025-09-18T14:16:43.375059"
+    },
+    {
+      "id": 2,
+      "nombre": "pizarra",
+      "descripcion": "Pizarra blanca con marcadores",
+      "created_at": "2025-09-18T14:16:43.375060"
+    },
+    {
+      "id": 3,
+      "nombre": "aire_acondicionado",
+      "descripcion": "Sistema de aire acondicionado",
+      "created_at": "2025-09-18T14:16:43.375061"
+    },
+    {
+      "id": 4,
+      "nombre": "wifi",
+      "descripcion": "Conexión WiFi de alta velocidad",
+      "created_at": "2025-09-18T14:16:43.375062"
+    },
+    {
+      "id": 5,
+      "nombre": "impresora",
+      "descripcion": "Impresora láser multifuncional",
+      "created_at": "2025-09-18T14:16:43.375062"
+    },
+    {
+      "id": 6,
+      "nombre": "telefono",
+      "descripcion": "Teléfono para conferencias",
+      "created_at": "2025-09-18T14:16:43.375063"
+    },
+    {
+      "id": 7,
+      "nombre": "cafetera",
+      "descripcion": "Máquina de café automática",
+      "created_at": "2025-09-18T14:16:43.375064"
+    }
+  ],
+  "rooms": [
+    {
+      "id": 1,
+      "nombre": "Sala Ejecutiva A",
+      "sede_id": 1,
+      "capacidad": 10,
+      "created_at": "2025-09-18T14:16:43.375064",
+      "updated_at": "2025-09-18T14:16:43.375065"
+    },
+    {
+      "id": 2,
+      "nombre": "Sala Reuniones B",
+      "sede_id": 1,
+      "capacidad": 6,
+      "created_at": "2025-09-18T14:16:43.375066",
+      "updated_at": "2025-09-18T14:16:43.375067"
+    },
+    {
+      "id": 3,
+      "nombre": "Sala Conferencias C",
+      "sede_id": 2,
+      "capacidad": 20,
+      "created_at": "2025-09-18T14:16:43.375067",
+      "updated_at": "2025-09-18T14:16:43.375068"
+    },
+    {
+      "id": 4,
+      "nombre": "Sala Creativa D",
+      "sede_id": 3,
+      "capacidad": 8,
+      "created_at": "2025-09-18T14:16:43.375069",
+      "updated_at": "2025-09-18T14:16:43.375069"
+    },
+    {
+      "id": 5,
+      "nombre": "Sala Focus E",
+      "sede_id": 4,
+      "capacidad": 4,
+      "created_at": "2025-09-18T14:16:43.375070",
+      "updated_at": "2025-09-18T14:16:43.375071"
+    }
+  ],
+  "room_recursos": [
+    {
+      "id": 1,
+      "room_id": 1,
+      "recurso_id": 1,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375072"
+    },
+    {
+      "id": 2,
+      "room_id": 1,
+      "recurso_id": 2,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375072"
+    },
+    {
+      "id": 3,
+      "room_id": 1,
+      "recurso_id": 3,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375073"
+    },
+    {
+      "id": 4,
+      "room_id": 1,
+      "recurso_id": 4,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375074"
+    },
+    {
+      "id": 5,
+      "room_id": 2,
+      "recurso_id": 2,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375075"
+    },
+    {
+      "id": 6,
+      "room_id": 2,
+      "recurso_id": 4,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375079"
+    },
+    {
+      "id": 7,
+      "room_id": 3,
+      "recurso_id": 1,
+      "cantidad": 2,
+      "created_at": "2025-09-18T14:16:43.375080"
+    },
+    {
+      "id": 8,
+      "room_id": 3,
+      "recurso_id": 2,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375081"
+    },
+    {
+      "id": 9,
+      "room_id": 3,
+      "recurso_id": 3,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375081"
+    },
+    {
+      "id": 10,
+      "room_id": 3,
+      "recurso_id": 4,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375082"
+    },
+    {
+      "id": 11,
+      "room_id": 3,
+      "recurso_id": 5,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375083"
+    },
+    {
+      "id": 12,
+      "room_id": 4,
+      "recurso_id": 2,
+      "cantidad": 2,
+      "created_at": "2025-09-18T14:16:43.375084"
+    },
+    {
+      "id": 13,
+      "room_id": 4,
+      "recurso_id": 4,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375084"
+    },
+    {
+      "id": 14,
+      "room_id": 4,
+      "recurso_id": 6,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375085"
+    },
+    {
+      "id": 15,
+      "room_id": 5,
+      "recurso_id": 4,
+      "cantidad": 1,
+      "created_at": "2025-09-18T14:16:43.375086"
+    }
+  ],
+  "reservations": [
+    {
+      "room_id": 2,
+      "fecha": "2025-09-18",
+      "hora_inicio": "19:32:35",
+      "hora_fin": "20:32:35",
+      "usuario_id": 3,
+      "estado": "cancelada",
+      "id": 1,
+      "created_at": "2025-09-18T15:08:27.559568"
+    },
+    {
+      "room_id": 2,
+      "fecha": "2025-09-18",
+      "hora_inicio": "19:32:35",
+      "hora_fin": "20:32:35",
+      "usuario_id": 3,
+      "estado": "cancelada",
+      "id": 2,
+      "created_at": "2025-09-18T15:22:31.382676"
+    },
+    {
+      "room_id": 2,
+      "fecha": "2025-09-18",
+      "hora_inicio": "19:32:35",
+      "hora_fin": "20:32:35",
+      "usuario_id": 4,
+      "estado": "cancelada",
+      "id": 3,
+      "created_at": "2025-09-18T15:24:15.107665"
+    },
+    {
+      "room_id": 2,
+      "fecha": "2025-09-18",
+      "hora_inicio": "19:32:35",
+      "hora_fin": "20:32:35",
+      "usuario_id": 3,
+      "estado": "cancelada",
+      "id": 4,
+      "created_at": "2025-09-18T15:25:56.464742"
+    }
+  ],
+  "penalizaciones": []
+}
