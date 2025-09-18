@@ -3,11 +3,12 @@ import json
 import os
 from typing import Dict, List, Any, Optional
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, date, time
+
 
 class JSONDatabase:
     def __init__(self, file_path: str = "data/database.json"):
-        self.file_path = file_path
+        self.file_path = os.path.abspath(file_path)
         self._ensure_file_exists()
         
     def _ensure_file_exists(self):
@@ -27,6 +28,8 @@ class JSONDatabase:
                     },
                     {
                         "id": 2,
+                        "nombre": "Juan Pérez",
+                        "email": "juan@email.com",
                         "nombre": "Juan Pérez",
                         "email": "juan@email.com",
                         "contraseña_hash": "",
@@ -270,8 +273,18 @@ class JSONDatabase:
     def _read_data(self) -> Dict[str, List[Any]]:
         with open(self.file_path, 'r') as f:
             return json.load(f)
-    
+
+    def _convert_dates(self, obj):
+        if isinstance(obj, (datetime, date, time)):
+            return obj.isoformat()
+        if isinstance(obj, dict):
+            return {k: self._convert_dates(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [self._convert_dates(i) for i in obj]
+        return obj
+
     def _write_data(self, data: Dict[str, List[Any]]):
+        data = self._convert_dates(data)
         with open(self.file_path, 'w') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
     
@@ -283,7 +296,12 @@ class JSONDatabase:
         data = self._read_data()
         items = data.get(collection, [])
         for item in items:
-            if item.get("id") == item_id:
+            # Convertir item["id"] a int para comparación segura
+            try:
+                item_id_value = int(item.get("id"))
+            except (ValueError, TypeError):
+                continue
+            if item_id_value == item_id:
                 return item
         return None
     
@@ -303,27 +321,33 @@ class JSONDatabase:
     def create(self, collection: str, item: Dict[str, Any]) -> Dict[str, Any]:
         data = self._read_data()
         items = data.get(collection, [])
-        
+
         # Generar ID
         new_id = max([item.get("id", 0) for item in items] or [0]) + 1
         item["id"] = new_id
-        
+
         # Agregar timestamps si no existen
         if "created_at" not in item:
             item["created_at"] = datetime.now().isoformat()
         if "updated_at" not in item and any(key in item for key in ["updated_at", "update_at"]):
             item["updated_at"] = datetime.now().isoformat()
-        
+
+        # Convertir objetos de fecha a strings antes de guardar
+        item = self._convert_dates(item)
+
         items.append(item)
         data[collection] = items
         self._write_data(data)
-        
+
         return item
     
     def update(self, collection: str, item_id: int, updates: Dict[str, Any]) -> Dict[str, Any]:
         data = self._read_data()
         items = data.get(collection, [])
-        
+
+        # Convertir objetos de fecha en updates a strings
+        updates = self._convert_dates(updates)
+
         for i, item in enumerate(items):
             if item.get("id") == item_id:
                 # Actualizar campos
@@ -331,11 +355,11 @@ class JSONDatabase:
                 # Actualizar timestamp de modificación
                 if "updated_at" in items[i] or any(key in items[i] for key in ["updated_at", "update_at"]):
                     items[i]["updated_at"] = datetime.now().isoformat()
-                
+
                 data[collection] = items
                 self._write_data(data)
                 return items[i]
-        
+
         raise HTTPException(status_code=404, detail=f"{collection[:-1]} not found")
     
     def delete(self, collection: str, item_id: int) -> bool:
@@ -350,6 +374,21 @@ class JSONDatabase:
                 return True
         
         return False
+    
+    # services/database.py (agregar esta función)
+def init_default_admin():
+    """Inicializa el usuario admin por defecto si no existe"""
+    admin_user = database.get_by_field("users", "email", "admin@coworking.com")
+    if not admin_user:
+        from utils.security import get_password_hash
+        admin_data = {
+            "nombre": "Administrador",
+            "email": "admin@coworking.com",
+            "contraseña_hash": get_password_hash("admin123"),
+            "rol": "admin"
+        }
+        database.create("users", admin_data)
+        print("👤 Usuario admin creado por defecto")
 
 # Instancia global de la base de datos
 database = JSONDatabase()

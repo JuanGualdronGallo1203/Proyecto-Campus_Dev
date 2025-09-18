@@ -21,3 +21,7 @@ class UserResponse(UserBase):
 
 class UserInDB(UserResponse):
     contraseña_hash: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

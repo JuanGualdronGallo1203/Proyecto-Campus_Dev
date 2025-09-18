@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 from typing import Optional
-from services.database import database
+from coworking_reservations.services.database import database
 
 # Configuración de seguridad
 SECRET_KEY = "tu_clave_secreta_super_segura_aqui_cambiar_en_produccion"

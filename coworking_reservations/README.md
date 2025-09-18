@@ -18,4 +18,4 @@ pip freeze > requirements.txt --> generar el reqs.txt de nuevo (en caso de insta
 
 # Ejecutar el servidor de desarrollo
 
-uvicorn app.main:app --reload
+uvicorn coworking_reservations.main:app --reload

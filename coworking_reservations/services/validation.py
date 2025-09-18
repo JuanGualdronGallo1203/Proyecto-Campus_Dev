@@ -1,6 +1,6 @@
 # services/validation.py
 from datetime import datetime, time, date
-from services.database import database
+from coworking_reservations.services.database import database
 
 def validate_reservation(reservation, user_id):
     # Verificar que la sala existe
